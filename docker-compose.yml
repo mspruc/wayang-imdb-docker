@@ -1,0 +1,51 @@
+version: '3.3'
+name: apache-wayang
+
+services:
+  base:
+    container_name: apache-wayang-base
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.base
+
+  app:
+    container_name: apache-wayang-app
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.app
+    depends_on:
+      - base
+    ports:
+      - 8888:8888
+    volumes:
+      - ./:/var/www/html
+    tty: true
+    restart: always
+
+  tpch:
+    container_name: apache-wayang-tpch
+    image: ghcr.io/scalytics/tpch-docker:main
+    tty: true
+    volumes:
+      - ./data/:/data
+    restart: always
+
+  job:
+      image: postgres:14-alpine
+      container_name: apache-wayang-job
+      ports:
+        - 5432:5432
+      volumes:
+        - ./scripts:/docker-entrypoint-initdb.d
+        - ./data:/tmp/data
+      environment:
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_DB=job
+      tty: true
+      restart: always
+      networks:
+        - wayang-network
+
+networks:
+  wayang-network:
