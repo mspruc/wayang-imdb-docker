@@ -21,6 +21,8 @@ services:
       - ./:/var/www/html
     tty: true
     restart: always
+    networks:
+        - wayang-network
 
   tpch:
     container_name: apache-wayang-tpch
